@@ -1,126 +1,37 @@
-# Guía Completa: Desplegar un Proyecto Angular en Netlify con Dominio de DreamHost y SSL Gratuito
+# Despliegue de Angular 16 en Netlify con Dominio de DreamHost mediante CNAME y SSL
 
 ## Objetivo
 
-Al finalizar este tutorial tendrás:
-
-* Aplicación Angular desplegada en Netlify.
-* Dominio personalizado administrado desde DreamHost.
-* Certificado SSL gratuito configurado automáticamente.
-* Redirección HTTPS habilitada.
-* Configuración para SPA (Single Page Application) Angular.
+Este documento describe el proceso completo para desplegar una aplicación Angular en Netlify, conectar un dominio adquirido en DreamHost utilizando la opción de configuración por CNAME y habilitar SSL  mediante Let's Encrypt.
 
 ---
 
-# 1. Construir el Proyecto Angular
+# 1. Preparación del Proyecto Angular
 
-Ubícate en la raíz del proyecto:
+## Verificar el outputPath
 
-```bash
-cd mi-proyecto-angular
+Abrir:
+
+```json
+angular.json
 ```
 
-Genera la versión de producción:
+Verificar que exista:
 
-```bash
-ng build --configuration production
+```json
+"outputPath": "dist/nombredelproyecto"
 ```
 
-Angular generará los archivos compilados dentro de:
-
-```bash
-dist/
-```
-
-Ejemplo:
-
-```bash
-dist/mi-aplicacion
-```
+Esta será la carpeta publicada por Netlify.
 
 ---
 
-# 2. Crear una Cuenta en Netlify
-
-Ingresa a:
-
-https://www.netlify.com
-
-Puedes registrarte utilizando:
-
-* GitHub
-* Correo electrónico
-
----
-
-# 3. Desplegar Manualmente en Netlify
-
-## Método rápido
-
-PARA TENER EN CUENTA
-
-EN LA CONFIGURACION DE DESPLIEGUE 
-DEBEMOS AGREGAR EL BULD COMMAND
-npm run build
-
-Y EL DIRECTORIO DE COMPILACION
-
-dist/mi-aplicacion
-
-Después de ejecutar el build:
-
-```bash
-ng build --configuration production
-```
-
-Ingresa al panel de Netlify:
-
-```text
-Sites → Add New Site → Deploy Manually
-```
-
-Arrastra la carpeta:
-
-```bash
-dist/mi-aplicacion
-```
-
-Netlify publicará el sitio y te entregará una URL temporal:
-
-```text
-https://nombre-aleatorio.netlify.app
-```
-
-Ejemplo:
-
-```text
-https://amazing-bird-12345.netlify.app
-```
-
----
-
-# 4. Configurar Angular para Rutas SPA
-
-Angular utiliza rutas internas.
-
-Si no se configura correctamente, al actualizar una página aparecerá:
-
-```text
-404 Not Found
-```
-
-## Crear archivo _redirects
-
-Dentro de:
-
-```bash
-src/
-```
+## Configurar soporte para rutas Angular (SPA)
 
 Crear:
 
-```bash
-_redirects
+```text
+src/_redirects
 ```
 
 Contenido:
@@ -129,20 +40,7 @@ Contenido:
 /* /index.html 200
 ```
 
----
-
-## Modificar angular.json
-
-Buscar:
-
-```json
-"assets": [
-  "src/favicon.ico",
-  "src/assets"
-]
-```
-
-Agregar:
+Verificar que esté incluido en:
 
 ```json
 "assets": [
@@ -152,44 +50,120 @@ Agregar:
 ]
 ```
 
-Volver a compilar:
+---
+
+# 2. Crear el archivo netlify.toml
+
+En la raíz del proyecto crear:
+
+```text
+netlify.toml
+```
+
+Contenido:
+
+```toml
+[build]
+command = "npm run build"
+publish = "dist/nombredelproyecto"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+```
+
+---
+
+# 3. Subir el Proyecto a GitHub
 
 ```bash
-ng build --configuration production
+git add .
+git commit -m "Configuracion Netlify"
+git push origin main
 ```
 
 ---
 
-# 5. Agregar Dominio Personalizado
+# 4. Crear el Sitio en Netlify
 
-Supongamos que el dominio es:
-
-```text
-midominio.com
-```
-
-Y está registrado en DreamHost.
+1. Ingresar a Netlify.
+2. Seleccionar **Add New Site**.
+3. Seleccionar **Import an Existing Project**.
+4. Conectar GitHub.
+5. Seleccionar el repositorio.
 
 ---
 
-## En Netlify
+# 5. Configuración de Despliegue
 
-Entrar a:
+## IMPORTANTE
 
-```text
-Site Settings
+Durante la configuración inicial del proyecto en Netlify se debe especificar el comando de compilación.
+
+### Build Command
+
+```bash
+npm run build
 ```
 
-Luego:
+### Publish Directory
 
 ```text
-Domain Management
+dist/nombredelproyecto
 ```
 
-Seleccionar:
+### Base Directory
 
 ```text
-Add Custom Domain
+(dejar vacío)
+```
+
+---
+
+## Resumen
+
+| Parámetro         | Valor                   |
+| ----------------- | ----------------------- |
+| Build Command     | npm run build           |
+| Publish Directory | dist/nombredelproyecto |
+| Base Directory    | Vacío                   |
+
+---
+
+# 6. Ejecutar el Primer Deploy
+
+Netlify ejecutará:
+
+```bash
+npm install
+npm run build
+```
+
+Y generará:
+
+```text
+dist/nombredelproyecto
+```
+
+Al finalizar obtendrás una URL similar a:
+
+```text
+https://nombre-sitio.netlify.app
+```
+
+Verifica que el sitio funcione correctamente.
+
+---
+
+# 7. Agregar el Dominio Personalizado
+
+Ingresar a:
+
+```text
+Site Configuration
+→ Domains
+→ Add Domain
 ```
 
 Agregar:
@@ -198,170 +172,145 @@ Agregar:
 midominio.com
 ```
 
-Y luego:
+Agregar también:
 
 ```text
 www.midominio.com
 ```
 
-Netlify mostrará los DNS necesarios.
-
 ---
 
-# 6. Configuración DNS en DreamHost
+# 8. Configurar el Dominio mediante la Opción CNAME Setup
 
-Ingresar a:
-
-```text
-DreamHost Panel
-```
-
-Luego:
-
-```text
-Domains
-```
+Una vez agregado el dominio, Netlify mostrará varias opciones de configuración DNS.
 
 Seleccionar:
 
 ```text
-Manage Domains
+Use a domain I already own
 ```
 
-Abrir:
+Luego seleccionar:
 
 ```text
-DNS Settings
+Use CNAME Setup
 ```
 
----
-
-## Configuración para dominio raíz
-
-Crear registros A.
-
-### Registro 1
+Netlify mostrará un registro similar a:
 
 ```text
-Type: A
-Host:
-@
-Value:
-75.2.60.5
-```
-
-### Registro 2
-
-```text
-Type: A
-Host:
-@
-Value:
-99.83.190.102
-```
-
----
-
-## Configuración para WWW
-
-Crear un CNAME:
-
-```text
-Type:
+www.midominio.com
 CNAME
+nombre-sitio.netlify.app
+```
 
-Host:
-www
+Y proporcionará las instrucciones para el dominio principal.
 
-Value:
-tu-sitio.netlify.app
+Esta opción permite mantener la administración DNS desde DreamHost sin delegar Nameservers a Netlify.
+
+---
+
+# 9. Configurar DNS en DreamHost
+
+Ingresar a:
+
+```text
+Domains
+→ Manage Domains
+→ DNS
+```
+
+---
+
+## Configuración del Subdominio WWW
+
+Crear un registro:
+
+```text
+Tipo: CNAME
+Host: www
+Valor: nombre-sitio.netlify.app
 ```
 
 Ejemplo:
 
 ```text
-www → amazing-bird-12345.netlify.app
+Tipo: CNAME
+Host: www
+Valor: modo-transformacion.netlify.app
 ```
 
 ---
 
-# 7. Verificar DNS
+## Configuración del Dominio Principal
 
-Puede tardar:
+Netlify mostrará dos registros A para el dominio raíz.
+
+Crear:
 
 ```text
-5 minutos a 24 horas
+Tipo: A
+Host: @
+Valor: 75.2.60.5
 ```
 
-Verificar propagación:
-
-https://dnschecker.org
-
-Buscar:
+Crear:
 
 ```text
-A
-```
-
-y
-
-```text
-CNAME
+Tipo: A
+Host: @
+Valor: 99.83.190.102
 ```
 
 ---
 
-# 8. Activar SSL Gratuito
+# 10. Esperar la Propagación DNS
 
-Una vez propagado el dominio:
-
-Entrar a:
+Tiempo estimado:
 
 ```text
-Netlify
+15 minutos a 24 horas
 ```
 
-Luego:
+Normalmente:
 
 ```text
-Domain Settings
+30 minutos a 2 horas
+```
+
+---
+
+# 11. Verificar el Dominio en Netlify
+
+Una vez propagados los registros DNS, Netlify mostrará:
+
+```text
+Domain Verified
+```
+
+---
+
+# 12. Activar SSL Gratuito
+
+Ingresar a:
+
+```text
+Site Configuration
+→ Domains
+→ HTTPS
 ```
 
 Seleccionar:
 
 ```text
-HTTPS
-```
-
-Después:
-
-```text
 Verify DNS Configuration
 ```
 
-Netlify emitirá automáticamente un certificado:
-
-```text
-Let's Encrypt
-```
-
-Sin costo.
+Netlify emitirá automáticamente un certificado SSL de Let's Encrypt.
 
 ---
 
-# 9. Forzar HTTPS
-
-Ir a:
-
-```text
-Site Settings
-```
-
-Luego:
-
-```text
-HTTPS
-```
+# 13. Forzar HTTPS
 
 Activar:
 
@@ -375,7 +324,7 @@ Con esto:
 http://midominio.com
 ```
 
-redireccionará automáticamente a:
+se redireccionará automáticamente a:
 
 ```text
 https://midominio.com
@@ -383,149 +332,39 @@ https://midominio.com
 
 ---
 
-# 10. Configurar Redirección WWW → Dominio Principal
+# 14. Configurar Dominio Principal
 
-Recomendado para SEO.
-
-Supongamos que el dominio principal será:
+Definir:
 
 ```text
-https://midominio.com
+midominio.com
 ```
 
-Crear archivo:
+como dominio principal.
 
-```bash
-src/_redirects
-```
-
-Contenido:
+Y dejar:
 
 ```text
-https://www.midominio.com/* https://midominio.com/:splat 301!
-/* /index.html 200
+www.midominio.com
 ```
 
-Volver a compilar:
+como alias.
 
-```bash
-ng build --configuration production
-```
-
-Subir nuevamente a Netlify.
+Netlify realizará automáticamente la redirección correspondiente.
 
 ---
 
-# 11. Despliegue Automático desde GitHub
-
-Recomendado para producción.
-
-## Crear repositorio
-
-```bash
-git init
-git add .
-git commit -m "Primer despliegue"
-git branch -M main
-git remote add origin URL_REPOSITORIO
-git push -u origin main
-```
-
----
-
-## Conectar GitHub a Netlify
-
-En Netlify:
-
-```text
-Add New Site
-```
-
-Seleccionar:
-
-```text
-Import Existing Project
-```
-
-Elegir:
-
-```text
-GitHub
-```
-
-Seleccionar repositorio.
-
----
-
-## Configuración Build
-
-### Build Command
-
-```bash
-ng build --configuration production
-```
-
-### Publish Directory
-
-```bash
-dist/mi-aplicacion/browser
-```
-
-Angular 17+ suele generar:
-
-```bash
-dist/proyecto/browser
-```
-
-Verifica la carpeta exacta después del build.
-
----
-
-# 12. Variables de Entorno (Opcional)
-
-En Netlify:
-
-```text
-Site Settings
-```
-
-→
-
-```text
-Environment Variables
-```
-
-Agregar:
-
-```text
-API_URL=https://api.midominio.com
-```
-
----
-
-# 13. Validaciones Finales
+# 15. Validación Final
 
 Verificar:
 
-### Dominio
-
 ```text
 https://midominio.com
 ```
-
-### WWW
 
 ```text
 https://www.midominio.com
 ```
-
-### SSL
-
-Candado verde activo.
-
-### Rutas Angular
-
-Probar:
 
 ```text
 https://midominio.com/login
@@ -539,33 +378,70 @@ https://midominio.com/dashboard
 https://midominio.com/perfil
 ```
 
-Recargar la página y confirmar que no aparezca error 404.
+Recargar las páginas para confirmar que Angular maneja correctamente las rutas.
 
 ---
 
-# Arquitectura Final
+# Problemas Frecuentes
+
+## Error
 
 ```text
-Usuario
-   │
-   ▼
-https://midominio.com
-   │
-   ▼
-Netlify CDN
-   │
-   ▼
-Angular Build
-   │
-   ▼
-API Backend
+No build steps found
 ```
 
-Resultado:
+Solución:
 
-✅ Hosting gratuito de Angular
-✅ CDN global de Netlify
+```bash
+npm run build
+```
+
+debe estar configurado en **Build Command**.
+
+---
+
+## Error
+
+```text
+Deploy directory does not exist
+```
+
+Verificar:
+
+```text
+dist/nombredelproyecto
+```
+
+como **Publish Directory**.
+
+---
+
+## Error
+
+```text
+Page Not Found al refrescar
+```
+
+Verificar:
+
+```text
+src/_redirects
+```
+
+Contenido:
+
+```text
+/* /index.html 200
+```
+
+---
+
+# Resultado Final
+
+✅ Aplicación Angular desplegada en Netlify
+✅ Integración continua con GitHub
+✅ Dominio de DreamHost conectado mediante CNAME Setup
+✅ DNS administrado desde DreamHost
 ✅ SSL gratuito Let's Encrypt
-✅ Dominio de DreamHost funcionando
-✅ Despliegue automático desde GitHub
-✅ Soporte completo para rutas Angular SPA
+✅ HTTPS forzado
+✅ Compatibilidad total con Angular SPA
